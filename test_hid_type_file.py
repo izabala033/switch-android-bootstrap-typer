@@ -13,6 +13,8 @@ from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parent
 spec = importlib.util.spec_from_file_location("hid_type_file", ROOT / "hid-type-file.py")
+if spec is None or spec.loader is None:
+    raise ImportError("Cannot load hid-type-file.py")
 typer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(typer)
 
