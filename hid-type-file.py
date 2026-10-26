@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Type a UTF-8 text file through NetHunter's 8-byte USB HID keyboard.
+"""Type bootstrap.bas through NetHunter's 8-byte USB HID keyboard.
 
 Run as root inside NetHunter Kali. Default layout: Spanish (Spain).
 The receiver must use the same layout, Caps Lock off, auto-indent off.
@@ -22,29 +22,23 @@ def keyboard_map(layout):
 
     def add(chars, keys, modifier=0):
         for char, key in zip(chars, keys):
-            mapping[char] = [(modifier, key)]
+            mapping[char] = (modifier, key)
 
     add("abcdefghijklmnopqrstuvwxyz", range(4, 30))
     add("ABCDEFGHIJKLMNOPQRSTUVWXYZ", range(4, 30), 2)
     add("1234567890", range(30, 40))
-    add(" \n\t", [44, 40, 43])
+    add(" \n", [44, 40])
     if layout == "us":
-        add("-=[]\\;'`,./", [45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 56])
-        add("!@#$%^&*()", range(30, 40), 2)
-        add('_+{}|:"~<>?', [45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 56], 2)
+        add("-=[];',./", [45, 46, 47, 48, 51, 52, 54, 55, 56])
+        add("!#$&*()", [30, 32, 33, 36, 37, 38, 39], 2)
+        add('+|:"<>', [46, 49, 51, 52, 54, 55], 2)
     else:
-        add("'¡+ñçº,.-", [45, 46, 48, 51, 49, 53, 54, 55, 56])
-        add('!"·$%&/()=', range(30, 40), 2)
-        add("?¿*ÑÇª;:_", [45, 46, 48, 51, 49, 53, 54, 55, 56], 2)
-        add("|@#~[]{}\\€", [30, 31, 32, 33, 47, 48, 52, 49, 53, 8], 64)
+        add("'+,.-", [45, 48, 54, 55, 56])
+        add('!"$&/()=', [30, 31, 33, 35, 36, 37, 38, 39], 2)
+        add("*;:", [48, 54, 55], 2)
+        add("|#[]", [30, 32, 47, 48], 64)
         add("<", [100])
         add(">", [100], 2)
-        # Standard Spanish dead keys require another keystroke.
-        for char, modifier, key in [("`", 0, 47), ("^", 2, 47), ("´", 0, 52), ("¨", 2, 52)]:
-            mapping[char] = [(modifier, key), (0, 44)]
-        for letters, modifier in [("áéíóúÁÉÍÓÚ", 0), ("äëïöüÄËÏÖÜ", 2)]:
-            for accented, plain in zip(letters, "aeiouAEIOU"):
-                mapping[accented] = [(modifier, 52)] + mapping[plain]
     return mapping
 
 
@@ -91,7 +85,7 @@ def main():
     if unsupported:
         parser.error("Unsupported characters: " + ", ".join(repr(c) for c in unsupported))
     duration = args.countdown + sum(
-        len(mapping[c]) * (args.newline_ms if c == "\n" else args.character_ms) / 1000
+        (args.newline_ms if c == "\n" else args.character_ms) / 1000
         for c in text
     )
     print(f"{len(text)} characters | layout={args.layout} | about {duration / 60:.1f} minutes", flush=True)
@@ -110,11 +104,11 @@ def main():
         write_report(fd, RELEASE)
         for char in text:
             interval = (args.newline_ms if char == "\n" else args.character_ms) / 1000
-            for modifier, key in mapping[char]:
-                write_report(fd, report(modifier, key))
-                time.sleep(0.02)
-                write_report(fd, RELEASE)
-                time.sleep(interval - 0.02)
+            modifier, key = mapping[char]
+            write_report(fd, report(modifier, key))
+            time.sleep(0.02)
+            write_report(fd, RELEASE)
+            time.sleep(interval - 0.02)
             done += 1
             if done % 100 == 0:
                 print(f"\rTyped {done}/{len(text)} characters", end="", flush=True)
