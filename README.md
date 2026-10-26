@@ -26,6 +26,52 @@ needed by the included bootstrap; it is not a general Unicode text typer.
 
 ## Usage
 
+The setup used for this project is a rooted Android device with the Kali kernel
+and Kali Full installed. A NetHunter custom command runs `type-bootstrap.sh`
+inside Kali as root.
+
+### Copy the files to the device
+
+With USB debugging enabled and the computer authorized on the Android device,
+run these commands from this repository on your computer (requires `adb`):
+
+```bash
+adb shell mkdir -p /sdcard/nh_files /sdcard/Download
+adb push hid-type-file.py type-bootstrap.sh /sdcard/nh_files/
+adb push bootstrap.bas /sdcard/Download/bootstrap.bas
+```
+
+These paths match the included launcher: `type-bootstrap.sh` runs
+`/sdcard/nh_files/hid-type-file.py`, which reads
+`/sdcard/Download/bootstrap.bas` by default. Repeat the relevant `adb push`
+command whenever you update a file.
+
+### Run inside Kali
+
+Configure the NetHunter custom command to execute this in Kali as root:
+
+```bash
+sh /sdcard/nh_files/type-bootstrap.sh
+```
+
+You can also run that command directly in a root Kali terminal. The launcher
+forwards arguments to Python. To validate the copied file without typing:
+
+```bash
+sh /sdcard/nh_files/type-bootstrap.sh --check
+```
+
+For a receiver using US English:
+
+```bash
+sh /sdcard/nh_files/type-bootstrap.sh --layout us
+```
+
+Focus an empty receiving editor during the five-second countdown. Press Ctrl+C
+to stop. The script types the file; it does not run the BASIC program.
+
+### Run Python directly
+
 From this directory, validate the file without opening a HID device or typing:
 
 ```bash
@@ -37,10 +83,6 @@ Type the file from a root shell inside NetHunter Kali:
 ```bash
 python3 hid-type-file.py bootstrap.bas --layout es
 ```
-
-Focus an empty receiving editor during the five-second countdown. Use
-`--layout us` instead if the receiver uses US English. Press Ctrl+C to stop.
-The script types the file; it does not run the BASIC program.
 
 Available options:
 
